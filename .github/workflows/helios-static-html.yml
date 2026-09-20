@@ -19,13 +19,34 @@ jobs:
           cache: pip
       - run: python -m pip install -r requirements.txt
       - run: python -m mkdocs build --strict
+        env:
+          SITE_URL: https://se.ifmo.ru/~s506308/project-python/
+      - name: Archive static site
+        run: tar -czf site.tar.gz -C site .
       - name: Package static site for Helios
         uses: actions/upload-artifact@v4
         with:
           name: helios-static-site
           path: site
           if-no-files-found: error
-
-# Helios Static HTML should consume the helios-static-site artifact.
-# Add the platform-specific deploy action and its required secrets after
-# creating the Helios project; the action name is intentionally not guessed.
+      - name: Upload archive to Helios
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: helios.cs.ifmo.ru
+          username: s506308
+          password: ${{ secrets.HELIOS_PASSWORD }}
+          port: 2222
+          source: site.tar.gz
+          target: /tmp
+      - name: Publish archive on Helios
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: helios.cs.ifmo.ru
+          username: s506308
+          password: ${{ secrets.HELIOS_PASSWORD }}
+          port: 2222
+          script: |
+            mkdir -p ~/public_html/project-python
+            rm -rf ~/public_html/project-python/*
+            tar -xzf /tmp/site.tar.gz -C ~/public_html/project-python
+            rm -f /tmp/site.tar.gz

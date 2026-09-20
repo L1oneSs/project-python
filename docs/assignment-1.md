@@ -76,20 +76,20 @@ git push -u origin main
 
 ### 9–10. Helios ИТМО и Static HTML
 
-Аккаунт и сервер Helios нужно активировать самостоятельно через инфраструктуру ИТМО. Workflow `helios-static-html.yml` собирает сайт и сохраняет каталог `site/` как артефакт с именем `helios-static-site`. В интерфейсе отечественного хостинга этот артефакт или репозиторий нужно подключить к действию **Static HTML** по инструкции площадки.
+Аккаунт Helios ИТМО публикует файлы из `~/public_html`. Workflow `helios-static-html.yml` собирает сайт в строгом режиме, сохраняет артефакт `helios-static-site`, передаёт архив по SSH и распаковывает его в `~/public_html/project-python`. Публичный адрес проекта: `https://se.ifmo.ru/~s506308/project-python/`.
 
-Такой вариант не содержит фиктивного токена или непроверенного action: секреты и точное имя action зависят от выданного Helios проекта. Для рабочего деплоя добавьте секреты площадки в Settings → Secrets and variables → Actions и замените последний шаг workflow на action из интерфейса Helios.
+Перед первым запуском добавьте в GitHub секрет `HELIOS_PASSWORD` через **Settings → Secrets and variables → Actions → New repository secret**. Сам пароль не должен находиться в YAML, Git-коммитах или тексте отчёта. Workflow использует порт SSH `2222` и очищает только содержимое каталога проекта `~/public_html/project-python`.
 
 ### 11. URL и подкаталог
 
 В `mkdocs.yml` заданы:
 
 ```yaml
-site_url: https://example.github.io/research-site/
+site_url: !ENV [SITE_URL, 'https://l1oness.github.io/project-python/']
 use_directory_urls: false
 ```
 
-Перед публикацией на GitHub Pages замените домен, имя пользователя и репозитория. `use_directory_urls: false` генерирует явные `.html`-адреса и уменьшает риск 404 при размещении в подкаталоге Helios. Если Helios выдаёт проект по другому префиксу, `site_url` должен содержать полный путь этого префикса.
+Для GitHub Pages используется значение по умолчанию, а Helios workflow передаёт `SITE_URL=https://se.ifmo.ru/~s506308/project-python/`. `use_directory_urls: false` генерирует явные `.html`-адреса и уменьшает риск 404 при размещении в подкаталоге. Если путь на Helios изменится, достаточно изменить переменную `SITE_URL` в workflow.
 
 ### 12. Проверки опубликованного сайта
 

@@ -1,6 +1,6 @@
 site_name: Исследовательские материалы
 site_description: Публикация результатов исследований и практических заданий
-site_url: https://l1oness.github.io/project-python/
+site_url: !ENV [SITE_URL, 'https://l1oness.github.io/project-python/']
 repo_url: https://github.com/L1oneSs/project-python
 repo_name: Исходный код
 
