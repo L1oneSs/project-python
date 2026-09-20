@@ -1,0 +1,31 @@
+name: Build artifact for Helios Static HTML
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m mkdocs build --strict
+      - name: Package static site for Helios
+        uses: actions/upload-artifact@v4
+        with:
+          name: helios-static-site
+          path: site
+          if-no-files-found: error
+
+# Helios Static HTML should consume the helios-static-site artifact.
+# Add the platform-specific deploy action and its required secrets after
+# creating the Helios project; the action name is intentionally not guessed.
