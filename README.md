@@ -1,6 +1,12 @@
 # Исследовательские материалы
 
-Статический сайт на MkDocs для публикации учебных исследований. Основной отчёт доступен в [docs/assignment-1.md](docs/assignment-1.md), а команды запуска и публикации — в [docs/operations.md](docs/operations.md).
+Статический сайт на MkDocs для публикации учебных исследований.
+
+## Опубликованный сайт
+
+- [GitHub Pages](https://l1oness.github.io/project-python/)
+- [Helios ИТМО](https://se.ifmo.ru/~s506308/project-python/)
+
 
 ## Быстрый старт
 
@@ -11,4 +17,4 @@ python -m pip install -r requirements.txt
 python -m mkdocs serve
 ```
 
-Перед первым push замените демонстрационные адреса `site_url` и `repo_url` в `mkdocs.yml`. GitHub Pages использует workflow `pages.yml`; `helios-static-html.yml` собирает артефакт `helios-static-site` для подключения в Helios.
+GitHub Pages использует workflow `pages.yml`, а `helios-static-html.yml` собирает и публикует сайт на Helios через SSH.
