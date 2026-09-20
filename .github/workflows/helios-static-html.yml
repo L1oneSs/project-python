@@ -29,6 +29,16 @@ jobs:
           name: helios-static-site
           path: site
           if-no-files-found: error
+      - name: Verify Helios password secret
+        shell: bash
+        env:
+          HELIOS_PASSWORD: ${{ secrets.HELIOS_PASSWORD }}
+        run: |
+          if [[ -z "$HELIOS_PASSWORD" ]]; then
+            echo "::error::HELIOS_PASSWORD is empty or unavailable to this workflow"
+            exit 1
+          fi
+          echo "HELIOS_PASSWORD is present"
       - name: Upload archive to Helios
         uses: appleboy/scp-action@v0.1.7
         with:
