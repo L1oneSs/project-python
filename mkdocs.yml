@@ -1,7 +1,7 @@
 site_name: Исследовательские материалы
 site_description: Публикация результатов исследований и практических заданий
-site_url: https://example.github.io/research-site/
-repo_url: https://github.com/USERNAME/REPOSITORY
+site_url: https://l1oness.github.io/project-python/
+repo_url: https://github.com/L1oneSs/project-python
 repo_name: Исходный код
 
 theme:
