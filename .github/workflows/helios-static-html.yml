@@ -29,22 +29,22 @@ jobs:
           name: helios-static-site
           path: site
           if-no-files-found: error
-      - name: Verify Helios password secret
+      - name: Verify Helios SSH key secret
         shell: bash
         env:
-          HELIOS_PASSWORD: ${{ secrets.HELIOS_PASSWORD }}
+          HELIOS_SSH_KEY: ${{ secrets.HELIOS_SSH_KEY }}
         run: |
-          if [[ -z "$HELIOS_PASSWORD" ]]; then
-            echo "::error::HELIOS_PASSWORD is empty or unavailable to this workflow"
+          if [[ -z "$HELIOS_SSH_KEY" ]]; then
+            echo "::error::HELIOS_SSH_KEY is empty or unavailable to this workflow"
             exit 1
           fi
-          echo "HELIOS_PASSWORD is present"
+          echo "HELIOS_SSH_KEY is present"
       - name: Upload archive to Helios
         uses: appleboy/scp-action@v0.1.7
         with:
           host: helios.cs.ifmo.ru
           username: s506308
-          password: ${{ secrets.HELIOS_PASSWORD }}
+          key: ${{ secrets.HELIOS_SSH_KEY }}
           port: 2222
           source: site.tar.gz
           target: /tmp
@@ -53,7 +53,7 @@ jobs:
         with:
           host: helios.cs.ifmo.ru
           username: s506308
-          password: ${{ secrets.HELIOS_PASSWORD }}
+          key: ${{ secrets.HELIOS_SSH_KEY }}
           port: 2222
           script: |
             mkdir -p ~/public_html/project-python
