@@ -50,8 +50,6 @@ use_directory_urls: false
 strict: true
 nav:
   - Главная: index.md
-  - Отчёт по заданию 1: assignment-1.md
-  - Исследования:
-      - Как добавлять материалы: research/index.md
-      - Пример исследования: research/example.md
-  - Эксплуатация: operations.md
+  - Подходы к публикации: publication-methods.md
+  - T1. Сравнительный анализ генераторов: t1.md
+  - P2. Стресс-тест научного контента: p2.md
