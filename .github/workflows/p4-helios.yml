@@ -78,16 +78,16 @@ jobs:
           target: /tmp
       - name: Publish release with backup
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          HELIOS_REMOTE_DIR: ${{ needs.target.outputs.remote_dir }}
+          HELIOS_RELEASE_ID: ${{ github.run_id }}-${{ github.sha }}
+          HELIOS_BRANCH_SLUG: ${{ needs.target.outputs.branch_slug }}
         with:
           host: helios.cs.ifmo.ru
           username: s506308
           key: ${{ secrets.HELIOS_SSH_KEY }}
           port: 2222
           envs: HELIOS_REMOTE_DIR,HELIOS_RELEASE_ID,HELIOS_BRANCH_SLUG
-          env:
-            HELIOS_REMOTE_DIR: ${{ needs.target.outputs.remote_dir }}
-            HELIOS_RELEASE_ID: ${{ github.run_id }}-${{ github.sha }}
-            HELIOS_BRANCH_SLUG: ${{ needs.target.outputs.branch_slug }}
           script: |
             set -eu
             target="$HOME/public_html/$HELIOS_REMOTE_DIR"
