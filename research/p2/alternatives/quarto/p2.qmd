@@ -1,0 +1,31 @@
+---
+title: "P2. Стресс-тест научного контента"
+bibliography: ../../references.bib
+format:
+  html:
+    code-line-numbers: true
+    toc: true
+---
+
+## Формула
+
+Модель метрики задаётся формулой @eq-metric.
+
+$$
+y_i = \beta_0 + \beta_1 x_i + \varepsilon_i
+$$ {#eq-metric}
+
+## Графики и таблица
+
+![Статический график](../../../../docs/assets/p2/static-result.png){#fig-static}
+
+```{python}
+#| label: fig-interactive
+#| fig-cap: "Интерактивный результат"
+
+import plotly.express as px
+figure = px.line(x=[1, 2, 3, 4, 5, 6], y=[1.1, 1.8, 3.2, 4.7, 6.1, 7.4])
+figure.show()
+```
+
+См. @fig-static и источник @pedregosa2011scikit.

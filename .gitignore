@@ -11,4 +11,6 @@ site/
 _build/
 .cache/
 .mkdocs_cache/
+docs/_generated/
+docs/assets/p2/
 .vscode/settings.json

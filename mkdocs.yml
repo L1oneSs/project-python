@@ -39,6 +39,7 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.keys
   - pymdownx.superfences
+  - pymdownx.snippets
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.tasklist
@@ -46,8 +47,13 @@ markdown_extensions:
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
+extra_css:
+  - stylesheets/extra.css
+
 use_directory_urls: false
 strict: true
+exclude_docs: |
+  _generated/p2-bibliography.md
 nav:
   - Главная: index.md
   - Подходы к публикации: publication-methods.md
