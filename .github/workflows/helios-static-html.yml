@@ -18,12 +18,9 @@ jobs:
           python-version: '3.13'
           cache: pip
       - run: python -m pip install -r requirements.txt
-      - run: python research/p2/build_assets.py
       - run: python -m mkdocs build --strict
         env:
           SITE_URL: https://se.ifmo.ru/~s506308/project-python/
-      - name: Archive static site
-        run: tar -czf site.tar.gz -C site .
       - name: Package static site for Helios
         uses: actions/upload-artifact@v4
         with:
@@ -40,8 +37,9 @@ jobs:
             exit 1
           fi
           echo "HELIOS_SSH_KEY is present"
-      - name: Upload archive to Helios
-        uses: appleboy/scp-action@v0.1.7
+      - name: Archive static site
+        run: tar -czf site.tar.gz -C site .
+      - uses: appleboy/scp-action@v0.1.7
         with:
           host: helios.cs.ifmo.ru
           username: s506308

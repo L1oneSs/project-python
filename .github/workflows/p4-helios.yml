@@ -1,0 +1,149 @@
+name: P4 quality deployment to Helios
+
+on:
+  push:
+    branches-ignore: [main]
+  workflow_dispatch:
+    inputs:
+      rollback:
+        description: Roll back the production Helios deployment
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  target:
+    if: ${{ !inputs.rollback }}
+    runs-on: ubuntu-latest
+    outputs:
+      branch_slug: ${{ steps.target.outputs.branch_slug }}
+      site_url: ${{ steps.target.outputs.site_url }}
+      remote_dir: ${{ steps.target.outputs.remote_dir }}
+    steps:
+      - id: target
+        shell: bash
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          branch_slug="$(printf '%s' "$BRANCH_NAME" | tr '/_' '--' | tr -cd 'A-Za-z0-9.-' | cut -c1-50)"
+          [[ -n "$branch_slug" ]] || branch_slug="branch-${GITHUB_RUN_NUMBER}"
+          if [[ "$BRANCH_NAME" == "main" ]]; then
+            echo "branch_slug=main" >> "$GITHUB_OUTPUT"
+            echo "site_url=https://se.ifmo.ru/~s506308/project-python/" >> "$GITHUB_OUTPUT"
+            echo "remote_dir=project-python" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch_slug=$branch_slug" >> "$GITHUB_OUTPUT"
+            echo "site_url=https://se.ifmo.ru/~s506308/project-python/previews/$branch_slug/" >> "$GITHUB_OUTPUT"
+            echo "remote_dir=project-python/previews/$branch_slug" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-deploy:
+    needs: target
+    if: ${{ !inputs.rollback }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m mkdocs build --strict
+        env:
+          SITE_URL: ${{ needs.target.outputs.site_url }}
+      - name: Archive release
+        run: tar -czf site-${{ needs.target.outputs.branch_slug }}.tar.gz -C site .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p4-helios-${{ needs.target.outputs.branch_slug }}
+          path: site
+          if-no-files-found: error
+      - name: Verify deploy key
+        shell: bash
+        env:
+          HELIOS_SSH_KEY: ${{ secrets.HELIOS_SSH_KEY }}
+        run: |
+          test -n "$HELIOS_SSH_KEY" || { echo "::error::HELIOS_SSH_KEY is empty"; exit 1; }
+      - name: Upload release to staging
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: helios.cs.ifmo.ru
+          username: s506308
+          key: ${{ secrets.HELIOS_SSH_KEY }}
+          port: 2222
+          source: site-${{ needs.target.outputs.branch_slug }}.tar.gz
+          target: /tmp
+      - name: Publish release with backup
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: helios.cs.ifmo.ru
+          username: s506308
+          key: ${{ secrets.HELIOS_SSH_KEY }}
+          port: 2222
+          envs: HELIOS_REMOTE_DIR,HELIOS_RELEASE_ID,HELIOS_BRANCH_SLUG
+          env:
+            HELIOS_REMOTE_DIR: ${{ needs.target.outputs.remote_dir }}
+            HELIOS_RELEASE_ID: ${{ github.run_id }}-${{ github.sha }}
+            HELIOS_BRANCH_SLUG: ${{ needs.target.outputs.branch_slug }}
+          script: |
+            set -eu
+            target="$HOME/public_html/$HELIOS_REMOTE_DIR"
+            backup_root="$HOME/.helios-backups/project-python/$HELIOS_BRANCH_SLUG"
+            staging="$HOME/.helios-staging/$HELIOS_RELEASE_ID"
+            archive="/tmp/site-$HELIOS_BRANCH_SLUG.tar.gz"
+            mkdir -p "$(dirname "$target")" "$backup_root"
+            rm -rf "$staging"
+            mkdir -p "$staging"
+            tar -xzf "$archive" -C "$staging"
+            rollback_on_error() {
+              if [[ ! -e "$target" && -d "$backup_root/previous" ]]; then
+                mv "$backup_root/previous" "$target"
+              fi
+            }
+            trap rollback_on_error ERR
+            if [[ -e "$target" ]]; then
+              rm -rf "$backup_root/previous"
+              mv "$target" "$backup_root/previous"
+            fi
+            mv "$staging" "$target"
+            rm -f "$archive"
+            trap - ERR
+      - name: Healthcheck published URL
+        env:
+          HEALTHCHECK_URL: ${{ needs.target.outputs.site_url }}
+        run: |
+          set -euo pipefail
+          response="$(curl --fail --silent --show-error --location --retry 3 --max-time 30 "$HEALTHCHECK_URL")"
+          grep -Fq "Исследовательские материалы" <<< "$response"
+          echo "Healthcheck passed: $HEALTHCHECK_URL"
+
+  rollback:
+    if: ${{ inputs.rollback }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore previous production release
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: helios.cs.ifmo.ru
+          username: s506308
+          key: ${{ secrets.HELIOS_SSH_KEY }}
+          port: 2222
+          script: |
+            set -eu
+            target="$HOME/public_html/project-python"
+            backup="$HOME/.helios-backups/project-python/main/previous"
+            current="$HOME/.helios-backups/project-python/main/rollback-current"
+            test -d "$backup"
+            rm -rf "$current"
+            mv "$target" "$current"
+            mv "$backup" "$target"
+            mv "$current" "$backup"
+      - name: Healthcheck rollback
+        run: |
+          set -euo pipefail
+          response="$(curl --fail --silent --show-error --location --retry 3 --max-time 30 "https://se.ifmo.ru/~s506308/project-python/")"
+          grep -Fq "Исследовательские материалы" <<< "$response"
+          echo "Rollback healthcheck passed"
