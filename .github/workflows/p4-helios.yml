@@ -2,7 +2,7 @@ name: P4 quality deployment to Helios
 
 on:
   push:
-    branches-ignore: [main]
+    branches: ['**']
   workflow_dispatch:
     inputs:
       rollback:

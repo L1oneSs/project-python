@@ -17,4 +17,4 @@ python -m pip install -r requirements.txt
 python -m mkdocs serve
 ```
 
-GitHub Pages использует workflow `pages.yml`, а `helios-static-html.yml` собирает и публикует сайт на Helios через SSH.
+GitHub Pages использует workflow `pages.yml`, а `p4-helios.yml` собирает и публикует сайт на Helios через SSH с healthcheck, preview и rollback.
